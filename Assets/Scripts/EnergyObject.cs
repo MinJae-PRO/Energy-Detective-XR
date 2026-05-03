@@ -6,17 +6,64 @@ public class EnergyObject : MonoBehaviour
     public bool isFixed = false;
     public int points = 10;
 
+    public Material wasteMaterial;
+    public Material fixedMaterial;
+
+    public Renderer objectRenderer;
+
     public GameObject wasteLabel;
     public GameObject fixedIndicator;
 
+    public Renderer statusBulbRenderer;
+    public Material bulbWasteMaterial;
+    public Material bulbFixedMaterial;
+
+    private void Start()
+    {
+        if (objectRenderer == null)
+        {
+            objectRenderer = GetComponent<Renderer>();
+        }
+
+        if (objectRenderer != null && wasteMaterial != null)
+        {
+            objectRenderer.material = wasteMaterial;
+        }
+
+        if (statusBulbRenderer != null && bulbWasteMaterial != null)
+        {
+            statusBulbRenderer.material = bulbWasteMaterial;
+        }
+
+        if (wasteLabel != null)
+        {
+            wasteLabel.SetActive(true);
+        }
+
+        if (fixedIndicator != null)
+        {
+            fixedIndicator.SetActive(false);
+        }
+    }
+
     public void FixObject()
     {
-        if (isFixed == true)
+        if (isFixed)
         {
             return;
         }
 
         isFixed = true;
+
+        if (objectRenderer != null && fixedMaterial != null)
+        {
+            objectRenderer.material = fixedMaterial;
+        }
+
+        if (statusBulbRenderer != null && bulbFixedMaterial != null)
+        {
+            statusBulbRenderer.material = bulbFixedMaterial;
+        }
 
         if (wasteLabel != null)
         {
@@ -27,7 +74,5 @@ public class EnergyObject : MonoBehaviour
         {
             fixedIndicator.SetActive(true);
         }
-
-        Debug.Log(objectName + " fixed! +" + points + " points");
     }
 }

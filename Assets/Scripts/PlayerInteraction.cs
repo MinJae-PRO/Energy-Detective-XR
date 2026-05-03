@@ -6,26 +6,43 @@ public class PlayerInteraction : MonoBehaviour
     public float interactDistance = 8f;
     public int score = 0;
     public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI timerText;
     public GameObject completionText;
+    public GameObject crosshairText;
 
     private Camera playerCamera;
     private EnergyObject[] energyObjects;
 
+    private float timer = 0f;
+    private bool isGameRunning = true;
+
     void Start()
     {
         playerCamera = GetComponentInChildren<Camera>();
-        energyObjects = FindObjectsOfType<EnergyObject>();
+        energyObjects = FindObjectsByType<EnergyObject>(FindObjectsSortMode.None);
 
         UpdateScoreText();
+        UpdateTimerText();
 
         if (completionText != null)
         {
             completionText.SetActive(false);
         }
+
+        if (crosshairText != null)
+        {
+            crosshairText.SetActive(true);
+        }
     }
 
     void Update()
     {
+        if (isGameRunning)
+        {
+            timer += Time.deltaTime;
+            UpdateTimerText();
+        }
+
         if (Input.GetMouseButtonDown(0))
         {
             TryInteract();
@@ -60,6 +77,14 @@ public class PlayerInteraction : MonoBehaviour
         }
     }
 
+    void UpdateTimerText()
+    {
+        if (timerText != null)
+        {
+            timerText.text = "Time: " + timer.ToString("F1") + "s";
+        }
+    }
+
     void CheckCompletion()
     {
         foreach (EnergyObject obj in energyObjects)
@@ -70,9 +95,16 @@ public class PlayerInteraction : MonoBehaviour
             }
         }
 
+        isGameRunning = false;
+
         if (completionText != null)
         {
             completionText.SetActive(true);
+        }
+
+        if (crosshairText != null)
+        {
+            crosshairText.SetActive(false);
         }
     }
 }
