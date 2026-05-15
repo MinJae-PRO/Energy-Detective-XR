@@ -74,5 +74,12 @@ public class EnergyObject : MonoBehaviour
         {
             fixedIndicator.SetActive(true);
         }
+        
+        // Add: Play sound effect (optional - to add an AudioSource component)
+        AudioSource audioSource = GetComponent<AudioSource>();
+        if (audioSource != null)
+        {
+            audioSource.Play();
+        }
     }
 }
