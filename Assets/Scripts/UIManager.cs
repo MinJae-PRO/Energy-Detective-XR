@@ -30,7 +30,7 @@ public class UIManager : MonoBehaviour
         "🖥️ Enable power save mode on computers - saves $$$!",
         "🔋 Smart power strips cut power to idle devices automatically!",
         "🌡️ Lower thermostat by 1°C saves 8% on heating bills!",
-        "🧺 Wash clothes in cold water - 90% less energy usage!",
+        "🧺 Wash clothes in cold water - 90% of less energy is used!",
         "💨 Clean dryer lint filter - improves efficiency by 30%!"
     };
     

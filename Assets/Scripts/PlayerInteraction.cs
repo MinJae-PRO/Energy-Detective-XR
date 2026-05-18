@@ -42,7 +42,7 @@ public class PlayerInteraction : MonoBehaviour
 
     void Update()
     {
-        // Add: Check for hover targets to give feedback
+        // Add: Checks for hover targets to give feedback
         CheckForHoverTarget();
         
         if (Input.GetMouseButtonDown(0))
@@ -51,7 +51,7 @@ public class PlayerInteraction : MonoBehaviour
         }
     }
     
-    // Add: Check what object player is looking at 
+    // Add: Checks what object player is looking at 
     void CheckForHoverTarget()
     {
         Ray ray = Add Ray(playerCamera.transform.position, playerCamera.transform.forward);

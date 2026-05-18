@@ -17,7 +17,7 @@ public class GameManager : MonoBehaviour
     private bool isGameRunning = true;
     private bool isMissionComplete = false;
     
-    // Singleton pattern for easy access
+    // Singleton pattern for an easy access
     public static GameManager Instance;
     
     void Awake()
