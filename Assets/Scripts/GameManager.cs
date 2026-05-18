@@ -5,7 +5,7 @@ public class GameManager : MonoBehaviour
 {
     public UIManager uiManager;
     
-    // Add: Time Attack Settings 
+    // Add: Time Attack Settings
     public float timeLimit = 60f;  // 60 seconds time attack mode
     public bool useTimeAttackMode = true;
     
@@ -17,7 +17,7 @@ public class GameManager : MonoBehaviour
     private bool isGameRunning = true;
     private bool isMissionComplete = false;
     
-    // Singleton pattern for an easy access
+    // Singleton pattern for easy access
     public static GameManager Instance;
     
     void Awake()
@@ -70,7 +70,8 @@ public class GameManager : MonoBehaviour
         {
             // Time Attack Mode: Count down
             currentTime -= Time.deltaTime;
-            uiManager.UpdateTimer(currentTime, true);
+            if (uiManager != null)
+                uiManager.UpdateTimer(currentTime, true);
             
             // Check for timeout failure
             if (currentTime <= 0)
@@ -83,7 +84,8 @@ public class GameManager : MonoBehaviour
         {
             // Original Mode: Count up
             currentTime += Time.deltaTime;
-            uiManager.UpdateTimer(currentTime, false);
+            if (uiManager != null)
+                uiManager.UpdateTimer(currentTime, false);
         }
         
         // Restart mission with R key 
@@ -100,12 +102,12 @@ public class GameManager : MonoBehaviour
         score += points;
         fixedObjects++;
         
-        uiManager.UpdateScore(score);
-        uiManager.UpdateRemainingObjects(totalObjects - fixedObjects, totalObjects);
-        
-        // Show educational tip 
         if (uiManager != null)
         {
+            uiManager.UpdateScore(score);
+            uiManager.UpdateRemainingObjects(totalObjects - fixedObjects, totalObjects);
+            
+            // Show educational tip on fix 
             string tip = GetEnergySavingTip(objectName);
             uiManager.ShowPopupEducationalTip(tip);
         }
@@ -117,25 +119,31 @@ public class GameManager : MonoBehaviour
         }
     }
     
-    void MissionComplete()
+    private void MissionComplete()
     {
         isMissionComplete = true;
         isGameRunning = false;
         
         float finalTime = useTimeAttackMode ? (timeLimit - currentTime) : currentTime;
-        uiManager.ShowCompleteMessage(finalTime);
-        uiManager.UpdateMissionStatus("COMPLETE ✓");
+        if (uiManager != null)
+        {
+            uiManager.ShowCompleteMessage(finalTime);
+            uiManager.UpdateMissionStatus("COMPLETE ✓");
+        }
         
         Debug.Log($"Mission Complete! Time: {finalTime:F1}s, Score: {score}");
     }
     
-    void MissionFailed()
+    private void MissionFailed()
     {
         isGameRunning = false;
         isMissionComplete = false;
         
-        uiManager.ShowMissionIncomplete();
-        uiManager.UpdateMissionStatus("FAILED - Time's Up!");
+        if (uiManager != null)
+        {
+            uiManager.ShowMissionIncomplete();
+            uiManager.UpdateMissionStatus("FAILED - Time's Up!");
+        }
         
         Debug.Log("Mission Failed - Time's Up!");
     }
@@ -157,7 +165,7 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1f;
     }
     
-    string GetEnergySavingTip(string objectName)
+    private string GetEnergySavingTip(string objectName)
     {
         // Educational tips based on object type
         string lowerName = objectName.ToLower();

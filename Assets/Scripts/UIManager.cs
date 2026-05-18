@@ -15,7 +15,7 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI instructionsText;
     public TextMeshProUGUI remainingObjectsText;
     
-    // Add: Mission incomplete popup 
+    // Add: Mission incomplete popup
     public GameObject missionIncompletePanel;
     public TextMeshProUGUI incompleteMessageText;
     
@@ -30,7 +30,7 @@ public class UIManager : MonoBehaviour
         "🖥️ Enable power save mode on computers - saves $$$!",
         "🔋 Smart power strips cut power to idle devices automatically!",
         "🌡️ Lower thermostat by 1°C saves 8% on heating bills!",
-        "🧺 Wash clothes in cold water - 90% of less energy is used!",
+        "🧺 Wash clothes in cold water - 90% less energy usage!",
         "💨 Clean dryer lint filter - improves efficiency by 30%!"
     };
     
@@ -39,17 +39,17 @@ public class UIManager : MonoBehaviour
 
     void Start()
     {
-        // Initialize dashboard
+        // Initialize dashboard 
         if (dashboardPanel != null)
             dashboardPanel.SetActive(true);
         
         if (missionIncompletePanel != null)
             missionIncompletePanel.SetActive(false);
         
-        // Start rotating educational messages
+        // Start rotating educational messages 
         StartEducationalMessageRotation();
         
-        // Display instructions
+        // Display instructions 
         DisplayInstructions();
         
         // Update dashboard initial state
@@ -137,7 +137,7 @@ public class UIManager : MonoBehaviour
             educationalMessageText.text = "⏰ Tip for next time: Prioritize major energy waste sources first!";
     }
     
-    // Add: Update dashboard mission status (Requirement #4)
+    // Add: Update dashboard mission status
     public void UpdateMissionStatus(string status)
     {
         if (missionStatusText != null)
@@ -151,8 +151,8 @@ public class UIManager : MonoBehaviour
             remainingObjectsText.text = $"Fix Remaining: {remaining}/{total}";
     }
     
-    // Add: Educational message rotation (Requirement #1)
-    void StartEducationalMessageRotation()
+    // Add: Educational message rotation 
+    private void StartEducationalMessageRotation()
     {
         if (messageRotator != null)
             StopCoroutine(messageRotator);
@@ -160,7 +160,7 @@ public class UIManager : MonoBehaviour
         messageRotator = StartCoroutine(RotateEducationalMessages());
     }
     
-    IEnumerator RotateEducationalMessages()
+    private IEnumerator RotateEducationalMessages()
     {
         while (isGameRunning)
         {
@@ -176,8 +176,8 @@ public class UIManager : MonoBehaviour
         }
     }
     
-    // Add: Display game instructions
-    void DisplayInstructions()
+    // Add: Display game instructions 
+    private void DisplayInstructions()
     {
         if (instructionsText != null)
         {
@@ -206,8 +206,10 @@ public class UIManager : MonoBehaviour
         StartCoroutine(ShowTemporaryMessage(tip, 3f));
     }
     
-    IEnumerator ShowTemporaryMessage(string message, float duration)
+    private IEnumerator ShowTemporaryMessage(string message, float duration)
     {
+        if (educationalMessageText == null) yield break;
+        
         string originalMessage = educationalMessageText.text;
         educationalMessageText.text = "💡 TIP: " + message;
         yield return Add WaitForSeconds(duration);
