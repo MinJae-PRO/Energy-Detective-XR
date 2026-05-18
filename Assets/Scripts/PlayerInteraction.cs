@@ -8,11 +8,7 @@ public class PlayerInteraction : MonoBehaviour
     public TextMeshProUGUI timerText;
     public GameObject completionText;
     public GameObject crosshairText;
-    
-    // Add: Crosshair color change for feedback
-    public GameObject crosshairObject;
-    public Color defaultCrosshairColor = Color.white;
-    public Color hoverCrosshairColor = Color.green;
+    public GameObject instructionPanel;
 
     private Camera playerCamera;
     private EnergyObject[] energyObjects;
@@ -54,28 +50,48 @@ public class PlayerInteraction : MonoBehaviour
     // Add: Checks what object player is looking at 
     void CheckForHoverTarget()
     {
-        Ray ray = Add Ray(playerCamera.transform.position, playerCamera.transform.forward);
-        RaycastHit hit;
-        
-        if (Physics.Raycast(ray, out hit, interactDistance))
+    Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+    RaycastHit hit;
+
+    if (Physics.Raycast(ray, out hit, interactDistance))
+    {
+        EnergyObject energyObject = hit.collider.GetComponentInParent<EnergyObject>();
+
+    if (energyObject != null && energyObject.isFixed == false)
+    {
+        QuizManager quizManager = FindFirstObjectByType<QuizManager>();
+
+        if (quizManager != null)
         {
-            EnergyObject energyObject = hit.collider.GetComponentInParent<EnergyObject>();
-            
-            if (energyObject != null && !energyObject.isFixed)
-            {
-                if (currentHoverTarget != energyObject)
-                {
-                    currentHoverTarget = energyObject;
-                    // Change crosshair color to indicate hover
-                    if (crosshairRenderer != null)
-                        crosshairRenderer.material.color = hoverCrosshairColor;
-                }
-                return;
-            }
+            quizManager.OpenQuiz(
+                energyObject,
+                energyObject.question,
+                energyObject.correctAnswer,
+                energyObject.wrongAnswer1,
+                energyObject.wrongAnswer2
+            );
         }
-        
-        // No valid target - reset crosshair
-        if (currentHoverTarget != null)
+    }
+
+        KickDoor kickDoor = hit.collider.GetComponentInParent<KickDoor>();
+
+        if (kickDoor != null)
+        {
+            kickDoor.OpenDoor();
+        }
+
+        InstructionNote instructionNote = hit.collider.GetComponentInParent<InstructionNote>();
+
+        if (instructionNote != null)
+        {
+            instructionNote.PickUpNote();
+        }
+    }
+}
+
+    void UpdateScoreText()
+    {
+        if (scoreText != null)
         {
             currentHoverTarget = null;
             if (crosshairRenderer != null)
@@ -110,6 +126,38 @@ public class PlayerInteraction : MonoBehaviour
                 // Update energyObjects array
                 energyObjects = FindObjectsByType<EnergyObject>(FindObjectsSortMode.None);
             }
+        }
+
+        isGameRunning = false;
+
+        if (completionText != null)
+        {
+            completionText.SetActive(true);
+            if (instructionPanel != null)
+            {
+                instructionPanel.SetActive(false);
+            }
+        }
+
+        if (crosshairText != null)
+        {
+            crosshairText.SetActive(false);
+        }
+    }
+        public void FixEnergyObjectFromQuiz(EnergyObject energyObject)
+    {
+        if (energyObject == null)
+        {
+            return;
+        }
+
+        if (energyObject.isFixed == false)
+        {
+            energyObject.FixObject();
+            score += energyObject.points;
+
+            UpdateScoreText();
+            CheckCompletion();
         }
     }
 }
