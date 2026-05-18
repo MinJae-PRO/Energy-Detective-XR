@@ -9,6 +9,7 @@ public class PlayerInteraction : MonoBehaviour
     public TextMeshProUGUI timerText;
     public GameObject completionText;
     public GameObject crosshairText;
+    public GameObject instructionPanel;
 
     private Camera playerCamera;
     private EnergyObject[] energyObjects;
@@ -51,23 +52,44 @@ public class PlayerInteraction : MonoBehaviour
 
     void TryInteract()
     {
-        Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
-        RaycastHit hit;
+    Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+    RaycastHit hit;
 
-        if (Physics.Raycast(ray, out hit, interactDistance))
+    if (Physics.Raycast(ray, out hit, interactDistance))
+    {
+        EnergyObject energyObject = hit.collider.GetComponentInParent<EnergyObject>();
+
+    if (energyObject != null && energyObject.isFixed == false)
+    {
+        QuizManager quizManager = FindFirstObjectByType<QuizManager>();
+
+        if (quizManager != null)
         {
-            EnergyObject energyObject = hit.collider.GetComponentInParent<EnergyObject>();
-
-            if (energyObject != null && energyObject.isFixed == false)
-            {
-                energyObject.FixObject();
-                score += energyObject.points;
-
-                UpdateScoreText();
-                CheckCompletion();
-            }
+            quizManager.OpenQuiz(
+                energyObject,
+                energyObject.question,
+                energyObject.correctAnswer,
+                energyObject.wrongAnswer1,
+                energyObject.wrongAnswer2
+            );
         }
     }
+
+        KickDoor kickDoor = hit.collider.GetComponentInParent<KickDoor>();
+
+        if (kickDoor != null)
+        {
+            kickDoor.OpenDoor();
+        }
+
+        InstructionNote instructionNote = hit.collider.GetComponentInParent<InstructionNote>();
+
+        if (instructionNote != null)
+        {
+            instructionNote.PickUpNote();
+        }
+    }
+}
 
     void UpdateScoreText()
     {
@@ -100,11 +122,31 @@ public class PlayerInteraction : MonoBehaviour
         if (completionText != null)
         {
             completionText.SetActive(true);
+            if (instructionPanel != null)
+            {
+                instructionPanel.SetActive(false);
+            }
         }
 
         if (crosshairText != null)
         {
             crosshairText.SetActive(false);
+        }
+    }
+        public void FixEnergyObjectFromQuiz(EnergyObject energyObject)
+    {
+        if (energyObject == null)
+        {
+            return;
+        }
+
+        if (energyObject.isFixed == false)
+        {
+            energyObject.FixObject();
+            score += energyObject.points;
+
+            UpdateScoreText();
+            CheckCompletion();
         }
     }
 }

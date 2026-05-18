@@ -5,6 +5,13 @@ public class EnergyObject : MonoBehaviour
     public string objectName = "Energy Object";
     public bool isFixed = false;
     public int points = 10;
+    
+    [Header("Quiz")]
+
+    public string question;
+    public string correctAnswer;
+    public string wrongAnswer1;
+    public string wrongAnswer2;
 
     public Material wasteMaterial;
     public Material fixedMaterial;
