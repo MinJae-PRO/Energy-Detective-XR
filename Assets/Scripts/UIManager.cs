@@ -20,7 +20,7 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI incompleteMessageText;
     
     // Educational messages pool 
-    private string[] educationalMessages = Add string[]
+    private string[] educationalMessages = new string[]
     {
         "💡 Did you know? Electronics use power even when 'off' (phantom load)!",
         "🔌 Unplug phone chargers - they draw power even without a phone!",
@@ -172,7 +172,7 @@ public class UIManager : MonoBehaviour
             }
             
             // Change message every 15 seconds
-            yield return Add WaitForSeconds(15f);
+            yield return new WaitForSeconds(15f);
         }
     }
     
@@ -212,7 +212,7 @@ public class UIManager : MonoBehaviour
         
         string originalMessage = educationalMessageText.text;
         educationalMessageText.text = "💡 TIP: " + message;
-        yield return Add WaitForSeconds(duration);
+        yield return new WaitForSeconds(duration);
         educationalMessageText.text = originalMessage;
     }
 }
