@@ -5,8 +5,7 @@ public class GameManager : MonoBehaviour
 {
     public UIManager uiManager;
     
-    // Add: Time Attack Settings
-    public float timeLimit = 60f;  // 60 seconds time attack mode
+    public float timeLimit = 60f;
     public bool useTimeAttackMode = true;
     
     private int score = 0;
@@ -17,12 +16,10 @@ public class GameManager : MonoBehaviour
     private bool isGameRunning = true;
     private bool isMissionComplete = false;
     
-    // Singleton pattern for easy access
     public static GameManager Instance;
     
     void Awake()
     {
-        // Singleton setup
         if (Instance == null)
         {
             Instance = this;
@@ -43,11 +40,11 @@ public class GameManager : MonoBehaviour
         
         if (useTimeAttackMode)
         {
-            currentTime = timeLimit;  // Start with full time
+            currentTime = timeLimit;
         }
         else
         {
-            currentTime = 0f;  // Original elapsed time mode
+            currentTime = 0f;
         }
         
         isGameRunning = true;
@@ -68,12 +65,10 @@ public class GameManager : MonoBehaviour
         
         if (useTimeAttackMode)
         {
-            // Time Attack Mode: Count down
             currentTime -= Time.deltaTime;
             if (uiManager != null)
                 uiManager.UpdateTimer(currentTime, true);
             
-            // Check for timeout failure
             if (currentTime <= 0)
             {
                 currentTime = 0;
@@ -82,13 +77,11 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            // Original Mode: Count up
             currentTime += Time.deltaTime;
             if (uiManager != null)
                 uiManager.UpdateTimer(currentTime, false);
         }
         
-        // Restart mission with R key 
         if (Input.GetKeyDown(KeyCode.R))
         {
             RestartMission();
@@ -106,13 +99,10 @@ public class GameManager : MonoBehaviour
         {
             uiManager.UpdateScore(score);
             uiManager.UpdateRemainingObjects(totalObjects - fixedObjects, totalObjects);
-            
-            // Show educational tip on fix 
             string tip = GetEnergySavingTip(objectName);
             uiManager.ShowPopupEducationalTip(tip);
         }
         
-        // Check if all objects are fixed
         if (fixedObjects >= totalObjects)
         {
             MissionComplete();
@@ -125,9 +115,11 @@ public class GameManager : MonoBehaviour
         isGameRunning = false;
         
         float finalTime = useTimeAttackMode ? (timeLimit - currentTime) : currentTime;
+        
+        // Use improved completion screen
         if (uiManager != null)
         {
-            uiManager.ShowCompleteMessage(finalTime);
+            uiManager.ShowImprovedCompletionScreen(finalTime, score, totalObjects);
             uiManager.UpdateMissionStatus("COMPLETE ✓");
         }
         
@@ -160,14 +152,12 @@ public class GameManager : MonoBehaviour
     
     public void RestartMission()
     {
-        // Reload current scene
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         Time.timeScale = 1f;
     }
     
     private string GetEnergySavingTip(string objectName)
     {
-        // Educational tips based on object type
         string lowerName = objectName.ToLower();
         
         if (lowerName.Contains("light") || lowerName.Contains("bulb"))

@@ -9,22 +9,21 @@ public class PlayerInteraction : MonoBehaviour
     public GameObject completionText;
     public GameObject crosshairText;
     
-    // Add: Crosshair color change for feedback
     public GameObject crosshairObject;
     public Color defaultCrosshairColor = Color.white;
     public Color hoverCrosshairColor = Color.green;
 
     private Camera playerCamera;
     private EnergyObject[] energyObjects;
-    
-    // Add: Track current hover target for visual feedback
     private EnergyObject currentHoverTarget;
     private Renderer crosshairRenderer;
+    private UIManager uiManager;
 
     void Start()
     {
         playerCamera = GetComponentInChildren<Camera>();
         energyObjects = FindObjectsByType<EnergyObject>(FindObjectsSortMode.None);
+        uiManager = FindObjectOfType<UIManager>();
         
         if (crosshairObject != null)
         {
@@ -42,7 +41,6 @@ public class PlayerInteraction : MonoBehaviour
 
     void Update()
     {
-        // Add: Checks for hover targets to give feedback
         CheckForHoverTarget();
         
         if (Input.GetMouseButtonDown(0))
@@ -51,10 +49,9 @@ public class PlayerInteraction : MonoBehaviour
         }
     }
     
-    // Add: Checks what object player is looking at 
     void CheckForHoverTarget()
     {
-        Ray ray = Add Ray(playerCamera.transform.position, playerCamera.transform.forward);
+        Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
         RaycastHit hit;
         
         if (Physics.Raycast(ray, out hit, interactDistance))
@@ -66,7 +63,10 @@ public class PlayerInteraction : MonoBehaviour
                 if (currentHoverTarget != energyObject)
                 {
                     currentHoverTarget = energyObject;
-                    // Change crosshair color to indicate hover
+                    // Tell UI to show hover effect
+                    if (uiManager != null)
+                        uiManager.SetCrosshairHover(true);
+                    
                     if (crosshairRenderer != null)
                         crosshairRenderer.material.color = hoverCrosshairColor;
                 }
@@ -74,10 +74,13 @@ public class PlayerInteraction : MonoBehaviour
             }
         }
         
-        // No valid target - reset crosshair
+        // No valid target - reset
         if (currentHoverTarget != null)
         {
             currentHoverTarget = null;
+            if (uiManager != null)
+                uiManager.SetCrosshairHover(false);
+            
             if (crosshairRenderer != null)
                 crosshairRenderer.material.color = defaultCrosshairColor;
         }
@@ -85,7 +88,7 @@ public class PlayerInteraction : MonoBehaviour
 
     void TryInteract()
     {
-        Ray ray = Add Ray(playerCamera.transform.position, playerCamera.transform.forward);
+        Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
         RaycastHit hit;
 
         if (Physics.Raycast(ray, out hit, interactDistance))
@@ -96,6 +99,12 @@ public class PlayerInteraction : MonoBehaviour
             {
                 energyObject.FixObject();
                 
+                // Show fix feedback through UI
+                if (uiManager != null)
+                {
+                    uiManager.ShowFixFeedback(energyObject.objectName, energyObject.points);
+                }
+                
                 // Use GameManager for scoring
                 if (GameManager.Instance != null)
                 {
@@ -103,7 +112,6 @@ public class PlayerInteraction : MonoBehaviour
                 }
                 else
                 {
-                    // Fallback to old scoring method
                     Debug.LogWarning("GameManager not found - using legacy scoring");
                 }
                 
