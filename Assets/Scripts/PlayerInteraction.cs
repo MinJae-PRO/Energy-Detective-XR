@@ -12,6 +12,7 @@ public class PlayerInteraction : MonoBehaviour
     public GameObject crosshairObject;
     public Color defaultCrosshairColor = Color.white;
     public Color hoverCrosshairColor = Color.green;
+    public GameObject instructionPanel;
 
     private Camera playerCamera;
     private EnergyObject[] energyObjects;
@@ -76,6 +77,48 @@ public class PlayerInteraction : MonoBehaviour
         
         // No valid target - reset
         if (currentHoverTarget != null)
+    Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+    RaycastHit hit;
+
+    if (Physics.Raycast(ray, out hit, interactDistance))
+    {
+        EnergyObject energyObject = hit.collider.GetComponentInParent<EnergyObject>();
+
+    if (energyObject != null && energyObject.isFixed == false)
+    {
+        QuizManager quizManager = FindFirstObjectByType<QuizManager>();
+
+        if (quizManager != null)
+        {
+            quizManager.OpenQuiz(
+                energyObject,
+                energyObject.question,
+                energyObject.correctAnswer,
+                energyObject.wrongAnswer1,
+                energyObject.wrongAnswer2
+            );
+        }
+    }
+
+        KickDoor kickDoor = hit.collider.GetComponentInParent<KickDoor>();
+
+        if (kickDoor != null)
+        {
+            kickDoor.OpenDoor();
+        }
+
+        InstructionNote instructionNote = hit.collider.GetComponentInParent<InstructionNote>();
+
+        if (instructionNote != null)
+        {
+            instructionNote.PickUpNote();
+        }
+    }
+}
+
+    void UpdateScoreText()
+    {
+        if (scoreText != null)
         {
             currentHoverTarget = null;
             if (uiManager != null)
@@ -118,6 +161,38 @@ public class PlayerInteraction : MonoBehaviour
                 // Update energyObjects array
                 energyObjects = FindObjectsByType<EnergyObject>(FindObjectsSortMode.None);
             }
+        }
+
+        isGameRunning = false;
+
+        if (completionText != null)
+        {
+            completionText.SetActive(true);
+            if (instructionPanel != null)
+            {
+                instructionPanel.SetActive(false);
+            }
+        }
+
+        if (crosshairText != null)
+        {
+            crosshairText.SetActive(false);
+        }
+    }
+        public void FixEnergyObjectFromQuiz(EnergyObject energyObject)
+    {
+        if (energyObject == null)
+        {
+            return;
+        }
+
+        if (energyObject.isFixed == false)
+        {
+            energyObject.FixObject();
+            score += energyObject.points;
+
+            UpdateScoreText();
+            CheckCompletion();
         }
     }
 }
