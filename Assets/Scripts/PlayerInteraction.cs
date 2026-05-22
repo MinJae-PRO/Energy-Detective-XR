@@ -120,4 +120,20 @@ public class PlayerInteraction : MonoBehaviour
             }
         }
     }
+        public void FixEnergyObjectFromQuiz(EnergyObject energyObject)
+    {
+        if (energyObject == null)
+        {
+            return;
+        }
+
+        if (energyObject.isFixed == false)
+        {
+            energyObject.FixObject();
+            score += energyObject.points;
+
+            UpdateScoreText();
+            CheckCompletion();
+        }
+    }
 }
