@@ -2,6 +2,7 @@ using UnityEngine;
 using TMPro;
 using System.Collections;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;  // SceneManager
 
 public class UIManager : MonoBehaviour
 {
@@ -20,13 +21,13 @@ public class UIManager : MonoBehaviour
     public GameObject missionIncompletePanel;
     public TextMeshProUGUI incompleteMessageText;
     
-    // Add: Feedback text for fixing objects (Member 3 requirement)
+    // Feedback text for fixing objects
     public GameObject feedbackTextPrefab;
     public Transform feedbackParent;
     public Color successFeedbackColor = Color.green;
     public Color warningFeedbackColor = Color.yellow;
     
-    // Add: Improved completion screen
+    // Improved completion screen
     public GameObject improvedCompletionPanel;
     public TextMeshProUGUI completionScoreText;
     public TextMeshProUGUI completionTimeText;
@@ -34,7 +35,7 @@ public class UIManager : MonoBehaviour
     public Button restartButton;
     public Button menuButton;
     
-    // Add: Crosshair design improvements
+    // Crosshair design improvements
     public GameObject crosshairObject;
     public Image crosshairImage;
     public Sprite defaultCrosshairSprite;
@@ -62,10 +63,13 @@ public class UIManager : MonoBehaviour
     private bool isGameRunning = true;
     private float crosshairPulseTimer = 0f;
     private bool crosshairPulsing = false;
+    private GameManager cachedGameManager;
 
     void Start()
     {
-        // Initialize dashboard
+        // Use FindFirstObjectByType instead of obsolete FindObjectOfType
+        cachedGameManager = FindFirstObjectByType<GameManager>();
+        
         if (dashboardPanel != null)
             dashboardPanel.SetActive(true);
         
@@ -75,31 +79,20 @@ public class UIManager : MonoBehaviour
         if (improvedCompletionPanel != null)
             improvedCompletionPanel.SetActive(false);
         
-        // Setup completion buttons
         if (restartButton != null)
             restartButton.onClick.AddListener(RestartGame);
         if (menuButton != null)
             menuButton.onClick.AddListener(GoToMainMenu);
         
-        // Start rotating educational messages
         StartEducationalMessageRotation();
-        
-        // Display improved instructions
         DisplayImprovedInstructions();
-        
-        // Setup improved crosshair
         SetupCrosshair();
-        
-        // Update dashboard initial state
         UpdateMissionStatus("IN PROGRESS");
-        
-        // Show welcome feedback
         ShowFloatingFeedback("Mission Started! Find and fix energy waste!", warningFeedbackColor);
     }
 
     void Update()
     {
-        // Crosshair pulse effect when hovering over fixable object
         if (crosshairPulsing && crosshairImage != null)
         {
             crosshairPulseTimer += Time.deltaTime * crosshairPulseSpeed;
@@ -127,14 +120,12 @@ public class UIManager : MonoBehaviour
         if (scoreText != null)
             scoreText.text = "🔋 SCORE: " + score;
         
-        // Pulse score text when it changes
         if (scoreText != null)
             StartCoroutine(PulseText(scoreText, Color.green));
         
-        // Update dashboard remaining objects
-        if (remainingObjectsText != null && GameManager.Instance != null)
+        if (remainingObjectsText != null && cachedGameManager != null)
         {
-            int remaining = GameManager.Instance.GetRemainingObjects();
+            int remaining = cachedGameManager.GetRemainingObjects();
             remainingObjectsText.text = $"📦 Remaining: {remaining}";
         }
     }
@@ -149,7 +140,6 @@ public class UIManager : MonoBehaviour
             int seconds = Mathf.FloorToInt(time % 60);
             timerText.text = $"⏱️ TIME: {minutes:00}:{seconds:00}";
             
-            // Color warning for low time
             if (time <= 10f)
             {
                 timerText.color = Color.red;
@@ -166,12 +156,12 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    // Add: Show floating feedback text when fixing objects
     public void ShowFloatingFeedback(string message, Color color)
     {
         if (feedbackTextPrefab == null) return;
         
-        GameObject feedback = Instantiate(feedbackTextPrefab, feedbackParent != null ? feedbackParent : dashboardPanel.transform);
+        Transform parent = feedbackParent != null ? feedbackParent : (dashboardPanel != null ? dashboardPanel.transform : transform);
+        GameObject feedback = Instantiate(feedbackTextPrefab, parent);
         TextMeshProUGUI textComponent = feedback.GetComponent<TextMeshProUGUI>();
         
         if (textComponent != null)
@@ -183,17 +173,13 @@ public class UIManager : MonoBehaviour
         Destroy(feedback, 2f);
     }
 
-    // Add: Show fix confirmation feedback
     public void ShowFixFeedback(string objectName, int points)
     {
         string feedbackMessage = $"✅ {objectName} FIXED! +{points} points!";
         ShowFloatingFeedback(feedbackMessage, successFeedbackColor);
-        
-        // Also show energy saving tip
-        StartCoroutine(ShowTemporaryTip($"💚 Great! You saved energy fixing the {objectName}!", 2.5f));
+        StartCoroutine(ShowTemporaryEducationalTip($"Great! You saved energy fixing the {objectName}!", 2.5f));
     }
 
-    // Add: Improved completion screen with grade
     public void ShowImprovedCompletionScreen(float finalTime, int finalScore, int totalObjects)
     {
         isGameRunning = false;
@@ -201,8 +187,6 @@ public class UIManager : MonoBehaviour
         if (improvedCompletionPanel != null)
         {
             improvedCompletionPanel.SetActive(true);
-            
-            // Calculate efficiency grade
             string grade = CalculateGrade(finalTime, finalScore, totalObjects);
             
             if (completionScoreText != null)
@@ -215,7 +199,6 @@ public class UIManager : MonoBehaviour
             {
                 completionGradeText.text = $"📊 EFFICIENCY GRADE: {grade}";
                 
-                // Set color based on grade
                 if (grade.StartsWith("S") || grade.StartsWith("A"))
                     completionGradeText.color = Color.green;
                 else if (grade.StartsWith("B") || grade.StartsWith("C"))
@@ -233,15 +216,14 @@ public class UIManager : MonoBehaviour
         
         UpdateMissionStatus("COMPLETE ✓");
         
-        // Stop educational messages
         if (messageRotator != null)
             StopCoroutine(messageRotator);
     }
 
     string CalculateGrade(float time, int score, int totalObjects)
     {
-        float timeScore = Mathf.Clamp01(60f / time); // Faster = better
-        float accuracyScore = (float)score / (totalObjects * 10f); // Assuming 10 points per object
+        float timeScore = Mathf.Clamp01(60f / time);
+        float accuracyScore = (float)score / (totalObjects * 10f);
         float totalScore = (timeScore + accuracyScore) / 2f;
         
         if (totalScore >= 0.9f) return "S - ENERGY HERO! ⭐⭐⭐";
@@ -253,12 +235,10 @@ public class UIManager : MonoBehaviour
 
     public void ShowCompleteMessage(float finalTime)
     {
-        // Old method - keeping for compatibility
         if (completeText != null)
         {
             completeText.text = "🎉 Mission Complete! 🎉\nTime: " + finalTime.ToString("F1") + "s";
         }
-        
         UpdateMissionStatus("COMPLETE ✓");
     }
     
@@ -300,7 +280,6 @@ public class UIManager : MonoBehaviour
             remainingObjectsText.text = $"📦 REMAINING: {remaining}/{total}";
     }
 
-    // Add: Crosshair feedback when hovering over fixable object
     public void SetCrosshairHover(bool isHovering)
     {
         crosshairPulsing = isHovering;
@@ -323,7 +302,6 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    // Add: Improved instructions with better clarity
     private void DisplayImprovedInstructions()
     {
         if (instructionsText != null)
@@ -380,15 +358,15 @@ public class UIManager : MonoBehaviour
     
     public void ShowPopupEducationalTip(string tip)
     {
-        StartCoroutine(ShowTemporaryTip(tip, 3f));
+        StartCoroutine(ShowTemporaryEducationalTip(tip, 3f));
     }
     
-    private IEnumerator ShowTemporaryTip(string tip, float duration)
+    private IEnumerator ShowTemporaryEducationalTip(string message, float duration)
     {
         if (educationalMessageText == null) yield break;
         
         string originalMessage = educationalMessageText.text;
-        educationalMessageText.text = "💡 " + tip;
+        educationalMessageText.text = "💡 " + message;
         yield return new WaitForSeconds(duration);
         educationalMessageText.text = originalMessage;
     }
@@ -401,24 +379,21 @@ public class UIManager : MonoBehaviour
         text.color = originalColor;
     }
     
-    private IEnumerator ShowTemporaryTip(string message, float duration)
-    {
-        if (educationalMessageText == null) yield break;
-        
-        string originalMessage = educationalMessageText.text;
-        educationalMessageText.text = "💡 " + message;
-        yield return new WaitForSeconds(duration);
-        educationalMessageText.text = originalMessage;
-    }
-    
     void RestartGame()
     {
-        if (GameManager.Instance != null)
-            GameManager.Instance.RestartMission();
+        if (cachedGameManager != null)
+            cachedGameManager.RestartMission();
+        else
+        {
+            // Fallback - find it again using new API
+            GameManager gm = FindFirstObjectByType<GameManager>();
+            if (gm != null)
+                gm.RestartMission();
+        }
     }
     
     void GoToMainMenu()
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+        SceneManager.LoadScene("MainMenu");
     }
 }

@@ -16,20 +16,6 @@ public class GameManager : MonoBehaviour
     private bool isGameRunning = true;
     private bool isMissionComplete = false;
     
-    public static GameManager Instance;
-    
-    void Awake()
-    {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-    }
-    
     void Start()
     {
         EnergyObject[] objects = FindObjectsByType<EnergyObject>(FindObjectsSortMode.None);
@@ -116,7 +102,6 @@ public class GameManager : MonoBehaviour
         
         float finalTime = useTimeAttackMode ? (timeLimit - currentTime) : currentTime;
         
-        // Use improved completion screen
         if (uiManager != null)
         {
             uiManager.ShowImprovedCompletionScreen(finalTime, score, totalObjects);
@@ -140,6 +125,7 @@ public class GameManager : MonoBehaviour
         Debug.Log("Mission Failed - Time's Up!");
     }
     
+    
     public int GetRemainingObjects()
     {
         return totalObjects - fixedObjects;
@@ -149,6 +135,7 @@ public class GameManager : MonoBehaviour
     {
         return currentTime;
     }
+    
     
     public void RestartMission()
     {
