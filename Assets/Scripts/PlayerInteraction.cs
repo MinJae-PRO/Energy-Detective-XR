@@ -4,120 +4,133 @@ using TMPro;
 public class PlayerInteraction : MonoBehaviour
 {
     public float interactDistance = 8f;
+    public int score = 0;
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI timerText;
     public GameObject completionText;
     public GameObject crosshairText;
-    
-    public GameObject crosshairObject;
-    public Color defaultCrosshairColor = Color.white;
-    public Color hoverCrosshairColor = Color.green;
+    public GameObject instructionPanel;
 
     private Camera playerCamera;
     private EnergyObject[] energyObjects;
-    private EnergyObject currentHoverTarget;
-    private Renderer crosshairRenderer;
-    private UIManager uiManager;
+
+    private float timer = 0f;
+    private bool isGameRunning = true;
 
     void Start()
     {
         playerCamera = GetComponentInChildren<Camera>();
         energyObjects = FindObjectsByType<EnergyObject>(FindObjectsSortMode.None);
-        uiManager = FindObjectOfType<UIManager>();
-        
-        if (crosshairObject != null)
-        {
-            crosshairRenderer = crosshairObject.GetComponent<Renderer>();
-            if (crosshairRenderer != null)
-                crosshairRenderer.material.color = defaultCrosshairColor;
-        }
-        
+
+        UpdateScoreText();
+        UpdateTimerText();
+
         if (completionText != null)
+        {
             completionText.SetActive(false);
-        
+        }
+
         if (crosshairText != null)
+        {
             crosshairText.SetActive(true);
+        }
     }
 
     void Update()
     {
-        CheckForHoverTarget();
-        
+        if (isGameRunning)
+        {
+            timer += Time.deltaTime;
+            UpdateTimerText();
+        }
+
         if (Input.GetMouseButtonDown(0))
         {
             TryInteract();
         }
     }
-    
-    void CheckForHoverTarget()
-    {
-        Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
-        RaycastHit hit;
-        
-        if (Physics.Raycast(ray, out hit, interactDistance))
-        {
-            EnergyObject energyObject = hit.collider.GetComponentInParent<EnergyObject>();
-            
-            if (energyObject != null && !energyObject.isFixed)
-            {
-                if (currentHoverTarget != energyObject)
-                {
-                    currentHoverTarget = energyObject;
-                    // Tell UI to show hover effect
-                    if (uiManager != null)
-                        uiManager.SetCrosshairHover(true);
-                    
-                    if (crosshairRenderer != null)
-                        crosshairRenderer.material.color = hoverCrosshairColor;
-                }
-                return;
-            }
-        }
-        
-        // No valid target - reset
-        if (currentHoverTarget != null)
-        {
-            currentHoverTarget = null;
-            if (uiManager != null)
-                uiManager.SetCrosshairHover(false);
-            
-            if (crosshairRenderer != null)
-                crosshairRenderer.material.color = defaultCrosshairColor;
-        }
-    }
 
     void TryInteract()
     {
-        Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
-        RaycastHit hit;
+    Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+    RaycastHit hit;
 
-        if (Physics.Raycast(ray, out hit, interactDistance))
+    if (Physics.Raycast(ray, out hit, interactDistance))
+    {
+        EnergyObject energyObject = hit.collider.GetComponentInParent<EnergyObject>();
+
+    if (energyObject != null && energyObject.isFixed == false)
+    {
+        QuizManager quizManager = FindFirstObjectByType<QuizManager>();
+
+        if (quizManager != null)
         {
-            EnergyObject energyObject = hit.collider.GetComponentInParent<EnergyObject>();
+            quizManager.OpenQuiz(
+                energyObject,
+                energyObject.question,
+                energyObject.correctAnswer,
+                energyObject.wrongAnswer1,
+                energyObject.wrongAnswer2
+            );
+        }
+    }
 
-            if (energyObject != null && !energyObject.isFixed)
+        KickDoor kickDoor = hit.collider.GetComponentInParent<KickDoor>();
+
+        if (kickDoor != null)
+        {
+            kickDoor.OpenDoor();
+        }
+
+        InstructionNote instructionNote = hit.collider.GetComponentInParent<InstructionNote>();
+
+        if (instructionNote != null)
+        {
+            instructionNote.PickUpNote();
+        }
+    }
+}
+
+    void UpdateScoreText()
+    {
+        if (scoreText != null)
+        {
+            scoreText.text = "Score: " + score;
+        }
+    }
+
+    void UpdateTimerText()
+    {
+        if (timerText != null)
+        {
+            timerText.text = "Time: " + timer.ToString("F1") + "s";
+        }
+    }
+
+    void CheckCompletion()
+    {
+        foreach (EnergyObject obj in energyObjects)
+        {
+            if (obj.isFixed == false)
             {
-                energyObject.FixObject();
-                
-                // Show fix feedback through UI
-                if (uiManager != null)
-                {
-                    uiManager.ShowFixFeedback(energyObject.objectName, energyObject.points);
-                }
-                
-                // Use GameManager for scoring
-                if (GameManager.Instance != null)
-                {
-                    GameManager.Instance.FixEnergyObject(energyObject.objectName, energyObject.points);
-                }
-                else
-                {
-                    Debug.LogWarning("GameManager not found - using legacy scoring");
-                }
-                
-                // Update energyObjects array
-                energyObjects = FindObjectsByType<EnergyObject>(FindObjectsSortMode.None);
+                return;
             }
+        }
+
+        isGameRunning = false;
+
+        if (completionText != null)
+        {
+            completionText.SetActive(true);
+            if (instructionPanel != null)
+            {
+                instructionPanel.SetActive(false);
+            }
+        }
+
+        if (crosshairText != null)
+        {
+            crosshairText.SetActive(false);
         }
     }
         public void FixEnergyObjectFromQuiz(EnergyObject energyObject)
