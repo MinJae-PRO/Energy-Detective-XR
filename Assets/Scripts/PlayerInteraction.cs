@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 public class PlayerInteraction : MonoBehaviour
 {
@@ -10,6 +11,19 @@ public class PlayerInteraction : MonoBehaviour
     public GameObject completionText;
     public GameObject crosshairText;
     public GameObject instructionPanel;
+
+    [Header("Text Outline Settings")]
+    [Tooltip("Outline color for text readability on any background")]
+    public Color textOutlineColor = new Color(0f, 0f, 0f, 1f);
+
+    [Tooltip("Outline thickness for text readability")]
+    public float textOutlineWidth = 0.25f;
+
+    [Header("Score Text Color")]
+    public Color scoreTextColor = new Color(1f, 0.95f, 0.2f, 1f);
+
+    [Header("Timer Text Color")]
+    public Color timerTextColor = new Color(0.3f, 0.9f, 1f, 1f);
 
     private Camera playerCamera;
     private EnergyObject[] energyObjects;
@@ -25,18 +39,53 @@ public class PlayerInteraction : MonoBehaviour
         energyObjects = FindObjectsByType<EnergyObject>(FindObjectsSortMode.None);
         totalObjectCount = energyObjects.Length;
 
+        // Apply outlines for readability on any background
+        ApplyTextOutline(scoreText);
+        ApplyTextOutline(timerText);
+
+        // Apply outlines to crosshair text if present
+        if (crosshairText != null)
+        {
+            TextMeshProUGUI crosshairTMP = crosshairText.GetComponent<TextMeshProUGUI>();
+            ApplyTextOutline(crosshairTMP);
+        }
+
         UpdateScoreText();
         UpdateTimerText();
 
         if (completionText != null)
         {
             completionText.SetActive(false);
+
+            // Apply outline to completion text
+            TextMeshProUGUI completionTMP = completionText.GetComponent<TextMeshProUGUI>();
+            ApplyTextOutline(completionTMP);
         }
 
         if (crosshairText != null)
         {
             crosshairText.SetActive(true);
         }
+    }
+
+    /// <summary>
+    /// Applies an outline to a TextMeshProUGUI element for readability on any background.
+    /// </summary>
+    void ApplyTextOutline(TextMeshProUGUI text)
+    {
+        if (text == null) return;
+
+        text.fontMaterial.EnableKeyword("OUTLINE_ON");
+        text.outlineColor = textOutlineColor;
+        text.outlineWidth = textOutlineWidth;
+
+        Shadow shadow = text.GetComponent<Shadow>();
+        if (shadow == null)
+        {
+            shadow = text.gameObject.AddComponent<Shadow>();
+        }
+        shadow.effectColor = new Color(0f, 0f, 0f, 0.6f);
+        shadow.effectDistance = new Vector2(2f, -2f);
     }
 
     void Update()
@@ -102,6 +151,7 @@ public class PlayerInteraction : MonoBehaviour
         if (scoreText != null)
         {
             scoreText.text = "Score: " + score;
+            scoreText.color = scoreTextColor;
         }
     }
 
@@ -112,6 +162,7 @@ public class PlayerInteraction : MonoBehaviour
             int minutes = Mathf.FloorToInt(timer / 60f);
             int seconds = Mathf.FloorToInt(timer % 60f);
             timerText.text = $"Time: {minutes:00}:{seconds:00}";
+            timerText.color = timerTextColor;
         }
     }
 

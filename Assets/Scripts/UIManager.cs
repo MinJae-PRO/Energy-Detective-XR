@@ -18,6 +18,22 @@ public class UIManager : MonoBehaviour
     [Tooltip("Text showing 'X / Y Fixed' (optional)")]
     public TextMeshProUGUI progressText;
 
+    [Header("Text Outline Settings")]
+    [Tooltip("Outline color for text readability on any background")]
+    public Color textOutlineColor = new Color(0f, 0f, 0f, 1f);
+
+    [Tooltip("Outline thickness for text readability")]
+    public float textOutlineWidth = 0.25f;
+
+    [Header("Score Text Colors")]
+    public Color scoreTextColor = new Color(1f, 0.95f, 0.2f, 1f);
+
+    [Header("Timer Text Colors")]
+    public Color timerTextColor = new Color(0.3f, 0.9f, 1f, 1f);
+
+    [Header("Progress Text Colors")]
+    public Color progressTextColor = new Color(0.9f, 0.9f, 0.9f, 1f);
+
     private Vector3 feedbackStartPos;
     private Coroutine feedbackCoroutine;
 
@@ -28,6 +44,34 @@ public class UIManager : MonoBehaviour
             feedbackText.gameObject.SetActive(false);
             feedbackStartPos = feedbackText.rectTransform.anchoredPosition;
         }
+
+        // Apply outlines to all text elements for readability
+        ApplyTextOutline(scoreText);
+        ApplyTextOutline(timerText);
+        ApplyTextOutline(completeText);
+        ApplyTextOutline(feedbackText);
+        ApplyTextOutline(progressText);
+    }
+
+    /// <summary>
+    /// Applies an outline to a TextMeshProUGUI element so text is readable on any background.
+    /// </summary>
+    void ApplyTextOutline(TextMeshProUGUI text)
+    {
+        if (text == null) return;
+
+        text.fontMaterial.EnableKeyword("OUTLINE_ON");
+        text.outlineColor = textOutlineColor;
+        text.outlineWidth = textOutlineWidth;
+
+        // Also add a shadow component as backup for non-material rendering
+        Shadow shadow = text.GetComponent<Shadow>();
+        if (shadow == null)
+        {
+            shadow = text.gameObject.AddComponent<Shadow>();
+        }
+        shadow.effectColor = new Color(0f, 0f, 0f, 0.6f);
+        shadow.effectDistance = new Vector2(2f, -2f);
     }
 
     public void UpdateScore(int score)
@@ -35,7 +79,7 @@ public class UIManager : MonoBehaviour
         if (scoreText != null)
         {
             scoreText.text = "<b>Score:</b> " + score;
-            scoreText.color = new Color(1f, 0.95f, 0.2f, 1f);
+            scoreText.color = scoreTextColor;
         }
     }
 
@@ -46,7 +90,7 @@ public class UIManager : MonoBehaviour
             int minutes = Mathf.FloorToInt(time / 60f);
             int seconds = Mathf.FloorToInt(time % 60f);
             timerText.text = $"<b>Time:</b> {minutes:00}:{seconds:00}";
-            timerText.color = new Color(0.3f, 0.9f, 1f, 1f);
+            timerText.color = timerTextColor;
         }
     }
 
@@ -55,6 +99,7 @@ public class UIManager : MonoBehaviour
         if (progressText != null)
         {
             progressText.text = $"<b>Fixed:</b> {fixedCount} / {totalCount}";
+            progressText.color = progressTextColor;
         }
     }
 
@@ -67,6 +112,7 @@ public class UIManager : MonoBehaviour
 
             completeText.text = "<size=150%>\u2605 CASE CLOSED! \u2605</size>\n\n" +
                                "<b>Time:</b> " + $"{minutes:00}:{seconds:00}";
+            completeText.color = new Color(1f, 0.85f, 0.2f, 1f);
         }
     }
 
