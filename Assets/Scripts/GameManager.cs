@@ -23,6 +23,7 @@ public class GameManager : MonoBehaviour
 
         uiManager.UpdateScore(score);
         uiManager.UpdateTimer(timer);
+        uiManager.UpdateProgress(0, totalObjects);
     }
 
     void Update()
@@ -40,6 +41,8 @@ public class GameManager : MonoBehaviour
         fixedObjects++;
 
         uiManager.UpdateScore(score);
+        uiManager.UpdateProgress(fixedObjects, totalObjects);
+        uiManager.ShowPositiveFeedback($"{objectName} Fixed!");
 
         if (fixedObjects >= totalObjects)
         {
